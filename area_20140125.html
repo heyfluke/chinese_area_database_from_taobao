@@ -3957,14 +3957,19 @@ var tdist={
 	}
 
 	function generateIOSPicker() {
-		// NSMutableArray *provinces = [NSMutableArray arrayWithObjects:@"北京", @"山东省", @"河北省", @"河南省", @"广东省", nil];
-		code = 'NSMutableArray *cities_of_province = nil;\n';
+		code = '////// start properties ( you may put this code in the .h file ):\n';
+		code += '@property (nonatomic, strong) NSMutableArray *provinces;\n';
+		code += '@property (nonatomic, strong) NSMutableArray *cities;\n';
+		code += '@property (nonatomic, strong) NSMutableArray *districts;\n';
+		code += '////// end properties.\n\n';
+
+		code += '/////// start init data ( you may put this code in viewDidLoad function ):\n'
+		code += 'self.cities = [NSMutableArray arrayWithObjects:nil];\n';
+		code += 'self.districts = [NSMutableArray arrayWithObjects:nil];\n';
+		code += 'NSMutableArray *cities_of_province = nil;\n';
 		code += 'NSMutableArray *district_of_city = nil;\n';
-		code += 'NSMutableArray *provinces = nil;\n';
-		code += 'NSMutableArray *cities = [NSMutableArray arrayWithObjects:nil];\n';
-		code += 'NSMutableArray *districts = [NSMutableArray arrayWithObjects:nil];\n';
 		prov_idx = {};
-		prov_code = 'provinces = [NSMutableArray arrayWithObjects:';
+		prov_code = 'self.provinces = [NSMutableArray arrayWithObjects:';
 		cities_code = '';
 		districts_code = '';
 		for (var i = 0; i < provinces.length; ++i) {
@@ -3986,20 +3991,21 @@ var tdist={
 					};
 					district_of_city_code += 'nil];\n';
 					districts_code += district_of_city_code;
-					districts_code += '[districts addObject:district_of_city];\n';
+					districts_code += '[self.districts addObject:district_of_city];\n';
 				} else {
 					console.log('no districts for city ' + tdist[provinces[i].cities[j]]);
 				}					
 			}
 			cities_of_province_code += 'nil];\n';
 			cities_code += cities_of_province_code;
-			cities_code += '[cities addObject:cities_of_province];\n';
+			cities_code += '[self.cities addObject:cities_of_province];\n';
 		}
 		prov_code += ' nil];\n';
 
 		code += districts_code + '\n';
 		code += cities_code + '\n';
 		code += prov_code + '\n';
+		code += '/////// end init data.\n'
 
 		document.getElementById('output').innerText = code;
 	}
