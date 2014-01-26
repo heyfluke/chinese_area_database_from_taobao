@@ -1,5 +1,6 @@
 <html>
 <head>
+<title>Province/City/District Data for China</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <script type="text/javascript">
 var tdist={
@@ -3902,16 +3903,16 @@ var tdist={
 		}
 	}
 
-	// generate area list
+	// generate district list
 	for (var i=0;i<MAX_AREA_NUMBER;++i) { 
 		if(tdist[i]) {
 			father_id = tdist[i][1];
 			if (city_cache[father_id] !== undefined) {
-				if (city_cache[father_id].areas == undefined) {
-					//console.log('create area list for area ' + city_cache[father_id]);
-					city_cache[father_id].areas = [];
+				if (city_cache[father_id].districts == undefined) {
+					//console.log('create district list for city ' + city_cache[father_id]);
+					city_cache[father_id].districts = [];
 				}
-				city_cache[father_id].areas.push(i);
+				city_cache[father_id].districts.push(i);
 			}
 		}
 	}
@@ -3921,34 +3922,90 @@ var tdist={
 		console.log('province changed to ' + e.value + ' selectedIndex ' + e.selectedIndex);
 		document.getElementById('city').innerHTML = '';
 		f = document.getElementById('city');
+		f.options[f.options.length] = new Option('请选择城市', -1);
 		// console.log(f);
-		for (var i = 0; i<provinces[e.selectedIndex].cities.length; ++i) {
-			console.log('city ' + tdist[provinces[e.selectedIndex].cities[i]] + ' cityid ' + provinces[e.selectedIndex].cities[i]);
-    		f.options[f.options.length] = new Option(tdist[provinces[e.selectedIndex].cities[i]], provinces[e.selectedIndex].cities[i]);
-		};
+		if (e.selectedIndex>0) {
+			index = e.selectedIndex-1;
+			for (var i = 0; i<provinces[index].cities.length; ++i) {
+				console.log('city ' + tdist[provinces[index].cities[i]] + ' cityid ' + provinces[index].cities[i]);
+	    		f.options[f.options.length] = new Option(tdist[provinces[index].cities[i]], provinces[index].cities[i]);
+			}
+		}
 	}
 
 	function onCityChanged() {
 		e = document.getElementById('city');
 		console.log('city changed to ' + e.value + ' selectedIndex ' + e.selectedIndex);
-		document.getElementById('area').innerHTML = '';
-		f = document.getElementById('area');
-		console.log(tdist[e.value]);
-		if (!tdist[e.value].areas || !tdist[e.value].areas.length) {
-			console.log('no area for this city');
-			return;
+		f = document.getElementById('district');
+		f.innerHTML = '';
+		f.options[f.options.length] = new Option('请选择区', -1);
+		if (e.selectedIndex > 0) {
+			console.log(tdist[e.value]);
+			if (!tdist[e.value].districts || !tdist[e.value].districts.length) {
+				console.log('no district for this city');
+				return;
+			}
+			for (var i = 0; i<tdist[e.value].districts.length; ++i) {
+				// console.log('district ' + tdist[e.value].districts[i])
+	    		f.options[f.options.length] = new Option(tdist[tdist[e.value].districts[i]], tdist[e.value].districts[i]);
+			}
 		}
-		for (var i = 0; i<tdist[e.value].areas.length; ++i) {
-			console.log('area ' + tdist[e.value].areas[i])
-    		f.options[f.options.length] = new Option(tdist[tdist[e.value].areas[i]], tdist[e.value].areas[i]);
-		};
 	}
 
 	function generateSQL() {
 		document.getElementById('output').innerText = 'FIXME';
 	}
 
+	function generateIOSPicker() {
+		// NSMutableArray *provinces = [NSMutableArray arrayWithObjects:@"北京", @"山东省", @"河北省", @"河南省", @"广东省", nil];
+		code = 'NSMutableArray *cities_of_province = nil;\n';
+		code += 'NSMutableArray *district_of_city = nil;\n';
+		code += 'NSMutableArray *provinces = nil;\n';
+		code += 'NSMutableArray *cities = [NSMutableArray arrayWithObjects:nil];\n';
+		code += 'NSMutableArray *districts = [NSMutableArray arrayWithObjects:nil];\n';
+		prov_idx = {};
+		prov_code = 'provinces = [NSMutableArray arrayWithObjects:';
+		cities_code = '';
+		districts_code = '';
+		for (var i = 0; i < provinces.length; ++i) {
+			prov_code += '@"' + tdist[provinces[i].id][0] + '", ';
+			// prov_code += '[provinces addObject:cities_of_province];\n';
+			prov_idx[provinces[i]] = i;
+
+			// cities
+			cities_of_province_code = '\ncities_of_province = [NSMutableArray arrayWithObjects:';
+			for (var j = 0; j < provinces[i].cities.length; ++j) {
+				//console.log(tdist[provinces[i].cities[j]]);
+				cities_of_province_code += '@"' + tdist[provinces[i].cities[j]][0] + '", ';
+
+				// districts
+				if (city_cache[provinces[i].cities[j]].districts != undefined && city_cache[provinces[i].cities[j]].districts.length) {
+					district_of_city_code = '\ndistrict_of_city = [NSMutableArray arrayWithObjects:';
+					for (var k = 0; k<city_cache[provinces[i].cities[j]].districts.length; ++k) {
+						district_of_city_code += '@"' + tdist[city_cache[provinces[i].cities[j]].districts[k]][0] + '", ';
+					};
+					district_of_city_code += 'nil];\n';
+					districts_code += district_of_city_code;
+					districts_code += '[districts addObject:district_of_city];\n';
+				} else {
+					console.log('no districts for city ' + tdist[provinces[i].cities[j]]);
+				}					
+			}
+			cities_of_province_code += 'nil];\n';
+			cities_code += cities_of_province_code;
+			cities_code += '[cities addObject:cities_of_province];\n';
+		}
+		prov_code += ' nil];\n';
+
+		code += districts_code + '\n';
+		code += cities_code + '\n';
+		code += prov_code + '\n';
+
+		document.getElementById('output').innerText = code;
+	}
+
 	document.write('<select id=province onchange="javascript:onProvinceChanged();">');
+	document.write('<option id=-1>请选择省份</option>');
 	for (var i = 0; i<provinces.length; ++i) {
 		document.write('<option id=' + provinces[i].id + '>' + tdist[provinces[i].id] + '</option>');
 	};
@@ -3956,9 +4013,9 @@ var tdist={
 
 	document.write('<select id=city onchange="javascript:onCityChanged();"></select>');
 	
-	document.write('<select id=area></select>');
+	document.write('<select id=district></select>');
 
-	document.write('<p><input type="button" onclick="javascript:generateSQL();" value="generate sql" /><br/><textarea cols=80 rows=20 id=output></textarea>');
+	document.write('<p><input type="button" onclick="javascript:generateSQL();" value="generate sql" /><input type="button" onclick="javascript:generateIOSPicker();" value="generate IOS Picker(Obj-C)" /><br/><textarea cols=80 rows=20 id=output></textarea>');
 </script>
 </body>
 </html>
