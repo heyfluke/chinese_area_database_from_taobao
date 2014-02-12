@@ -3967,7 +3967,8 @@ var tdist={
 		code += 'self.cities = [NSMutableArray arrayWithObjects:nil];\n';
 		code += 'self.districts = [NSMutableArray arrayWithObjects:nil];\n';
 		code += 'NSMutableArray *cities_of_province = nil;\n';
-		code += 'NSMutableArray *district_of_city = nil;\n';
+		code += 'NSMutableArray *districts_of_city = nil;\n';
+		code += 'NSMutableArray *districts_of_province = nil;\n';
 		prov_idx = {};
 		prov_code = 'self.provinces = [NSMutableArray arrayWithObjects:';
 		cities_code = '';
@@ -3977,6 +3978,8 @@ var tdist={
 			// prov_code += '[provinces addObject:cities_of_province];\n';
 			prov_idx[provinces[i]] = i;
 
+			districts_code += 'districts_of_province = [NSMutableArray arrayWithObjects:nil];\n';
+
 			// cities
 			cities_of_province_code = '\ncities_of_province = [NSMutableArray arrayWithObjects:';
 			for (var j = 0; j < provinces[i].cities.length; ++j) {
@@ -3985,18 +3988,22 @@ var tdist={
 
 				// districts
 				if (city_cache[provinces[i].cities[j]].districts != undefined && city_cache[provinces[i].cities[j]].districts.length) {
-					district_of_city_code = '\ndistrict_of_city = [NSMutableArray arrayWithObjects:';
+					districts_of_city_code = '\ndistricts_of_city = [NSMutableArray arrayWithObjects:';
 					for (var k = 0; k<city_cache[provinces[i].cities[j]].districts.length; ++k) {
-						district_of_city_code += '@"' + tdist[city_cache[provinces[i].cities[j]].districts[k]][0] + '", ';
+						districts_of_city_code += '@"' + tdist[city_cache[provinces[i].cities[j]].districts[k]][0] + '", ';
 					};
-					district_of_city_code += 'nil];\n';
-					districts_code += district_of_city_code;
-					districts_code += '[self.districts addObject:district_of_city];\n';
+					districts_of_city_code += 'nil];\n';
+					districts_code += districts_of_city_code;
+					//districts_code += '[self.districts addObject:districts_of_city];\n';
+					districts_code += '[districts_of_province addObject:districts_of_city];\n';
 				} else {
 					console.log('no districts for city ' + tdist[provinces[i].cities[j]]);
 				}					
 			}
 			cities_of_province_code += 'nil];\n';
+
+			districts_code += '[self.districts addObject:districts_of_province];\n';
+
 			cities_code += cities_of_province_code;
 			cities_code += '[self.cities addObject:cities_of_province];\n';
 		}
