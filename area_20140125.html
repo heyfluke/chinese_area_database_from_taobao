@@ -3987,18 +3987,18 @@ var tdist={
 				cities_of_province_code += '@"' + tdist[provinces[i].cities[j]][0] + '", ';
 
 				// districts
+				districts_of_city_code = '\ndistricts_of_city = [NSMutableArray arrayWithObjects:';
 				if (city_cache[provinces[i].cities[j]].districts != undefined && city_cache[provinces[i].cities[j]].districts.length) {
-					districts_of_city_code = '\ndistricts_of_city = [NSMutableArray arrayWithObjects:';
 					for (var k = 0; k<city_cache[provinces[i].cities[j]].districts.length; ++k) {
 						districts_of_city_code += '@"' + tdist[city_cache[provinces[i].cities[j]].districts[k]][0] + '", ';
 					};
-					districts_of_city_code += 'nil];\n';
-					districts_code += districts_of_city_code;
-					//districts_code += '[self.districts addObject:districts_of_city];\n';
-					districts_code += '[districts_of_province addObject:districts_of_city];\n';
 				} else {
-					console.log('no districts for city ' + tdist[provinces[i].cities[j]]);
-				}					
+					//districts_code += '[districts_of_province addObject:districts_of_city];\n';
+				}
+				districts_of_city_code += 'nil];\n';
+				districts_code += districts_of_city_code;
+				//districts_code += '[self.districts addObject:districts_of_city];\n';
+				districts_code += '[districts_of_province addObject:districts_of_city];\n';
 			}
 			cities_of_province_code += 'nil];\n';
 
